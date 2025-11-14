@@ -46,6 +46,12 @@ Glean is a federated learning platform that lets bakeries collaborate on demand 
    pip install -r requirements.txt
    ```
 
+### Hackathon Server Deployment
+
+```bash
+./submit-job.sh "cd /home/team13/safe_waste_help_small && flwr run . cluster-cpu"
+```
+
 ### Run Local Simulation
 
 Test with 5 simulated bakeries on your local machine:
