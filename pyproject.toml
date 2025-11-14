@@ -1,0 +1,41 @@
+[project]
+name = "glean"
+version = "1.0.0"
+description = "Federated bakery demand forecasting platform - Privacy-preserving collaborative ML for small businesses"
+authors = [
+    { name = "Glean Team" }
+]
+dependencies = [
+    "flwr[simulation]>=1.23.0,<2.0",
+    "pandas>=2.0.0",
+    "scikit-learn>=1.3.0",
+    "xgboost>=2.0.0",
+    "numpy>=1.24.0",
+]
+requires-python = ">=3.9"
+
+[tool.flwr.app]
+publisher = "glean"
+
+[tool.flwr.app.components]
+serverapp = "glean.server_app:app"
+clientapp = "glean.client_app:app"
+
+[tool.flwr.app.config]
+num-server-rounds = 20
+
+[tool.flwr.federations]
+# Local simulation with 5 virtual bakeries
+local-simulation = { options.num-supernodes = 5 }
+
+# Cluster deployment with CPU
+[tool.flwr.federations.cluster-cpu]
+options.num-supernodes = 5
+options.backend.client-resources.num-cpus = 2
+options.backend.client-resources.num-gpus = 0
+
+# Cluster deployment with GPU
+[tool.flwr.federations.cluster-gpu]
+options.num-supernodes = 5
+options.backend.client-resources.num-cpus = 4
+options.backend.client-resources.num-gpus = 1

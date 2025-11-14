@@ -1,0 +1,13 @@
+# Glean Cluster Configuration - CPU Mode
+#
+# This configuration is used when deploying to the cluster with CPU-only resources.
+# Usage: ./submit-job.sh "flwr run . cluster-cpu"
+
+[tool.flwr.federations.cluster-cpu]
+# Number of bakery clients to simulate
+options.num-supernodes = 5
+
+# CPU resource allocation per client
+[tool.flwr.federations.cluster-cpu.options.backend.client-resources]
+num-cpus = 2  # 2 CPU cores per bakery client
+num-gpus = 0  # No GPU for CPU mode
