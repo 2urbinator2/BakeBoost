@@ -1,0 +1,18 @@
+# Glean Cluster Configuration - GPU Mode
+#
+# This configuration is used when deploying to the cluster with GPU acceleration.
+# The cluster provides AMD MI300X GPUs for deep learning workloads.
+#
+# Usage: ./submit-job.sh "flwr run . cluster-gpu" --gpu
+
+[tool.flwr.federations.cluster-gpu]
+# Number of bakery clients to simulate
+options.num-supernodes = 5
+
+# GPU resource allocation per client
+[tool.flwr.federations.cluster-gpu.options.backend.client-resources]
+num-cpus = 4  # 4 CPU cores per bakery client
+num-gpus = 1  # 1 AMD MI300X GPU per client
+
+# Note: GPU mode is useful if you implement deep learning models
+# (e.g., LSTM, Transformer) instead of XGBoost for demand forecasting
