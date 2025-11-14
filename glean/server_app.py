@@ -29,12 +29,13 @@ def server_fn(context: Context) -> ServerAppComponents:
     log(INFO, "Waiting for bakery clients to connect...")
 
     # Define federated averaging strategy
+    # With 9 stores, require majority (5) to participate
     strategy = FedAvg(
         fraction_fit=1.0,  # Use 100% of available clients for training each round
         fraction_evaluate=1.0,  # Use 100% of clients for evaluation
-        min_fit_clients=3,  # Minimum 3 bakeries needed to start training
-        min_evaluate_clients=3,  # Minimum 3 bakeries needed for evaluation
-        min_available_clients=3,  # Wait for at least 3 bakeries to connect
+        min_fit_clients=5,  # Minimum 5 stores (majority of 9) needed to start training
+        min_evaluate_clients=5,  # Minimum 5 stores needed for evaluation
+        min_available_clients=5,  # Wait for at least 5 stores to connect
     )
 
     # Server configuration

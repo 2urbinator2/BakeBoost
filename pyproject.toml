@@ -25,17 +25,17 @@ clientapp = "glean.client_app:app"
 num-server-rounds = 20
 
 [tool.flwr.federations]
-# Local simulation with 5 virtual bakeries
-local-simulation = { options.num-supernodes = 5 }
+# Local simulation with 9 stores (one client per store)
+local-simulation = { options.num-supernodes = 9 }
 
-# Cluster deployment with CPU
+# Cluster deployment with CPU (9 stores)
 [tool.flwr.federations.cluster-cpu]
-options.num-supernodes = 5
+options.num-supernodes = 9
 options.backend.client-resources.num-cpus = 2
 options.backend.client-resources.num-gpus = 0
 
-# Cluster deployment with GPU
+# Cluster deployment with GPU (9 stores)
 [tool.flwr.federations.cluster-gpu]
-options.num-supernodes = 5
+options.num-supernodes = 9
 options.backend.client-resources.num-cpus = 4
 options.backend.client-resources.num-gpus = 1
