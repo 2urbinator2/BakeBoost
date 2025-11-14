@@ -27,3 +27,15 @@ num-server-rounds = 20
 [tool.flwr.federations]
 # Local simulation with 5 virtual bakeries
 local-simulation = { options.num-supernodes = 5 }
+
+# Cluster deployment with CPU
+[tool.flwr.federations.cluster-cpu]
+options.num-supernodes = 5
+options.backend.client-resources.num-cpus = 2
+options.backend.client-resources.num-gpus = 0
+
+# Cluster deployment with GPU
+[tool.flwr.federations.cluster-gpu]
+options.num-supernodes = 5
+options.backend.client-resources.num-cpus = 4
+options.backend.client-resources.num-gpus = 1
