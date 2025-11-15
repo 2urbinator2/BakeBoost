@@ -11,6 +11,15 @@ Bake Boost is the federated learning platform that lets bakeries collaborate on 
 
 Small bakeries face a daily dilemma: produce too much, waste food, money and labor at the end of the day. Or even produce too little and disappoint customers. Especially for small bakeries, this makes it extremely difficult to keep up with the large competition from chains. They lack the data science expertise and resources that large chains have. The result: massive food waste, higher costs, and inefficient staffing.
 
+## Results
+
+![Results](results/results.jpg)
+
+Comparative training on separate training data, used by the stores independently, show worse RMSE and MAE metrics. It is explained by insufficient amounts of data stored by some of the shops. Using federated learning allows the stores to accurately train the model while not directly sharing their data.
+
+The data distribution of all datasets shows strong weekly seasonality and therefore shows similar correlation between features and target, which allowed easy integration.
+
+
 ## Quick Start
 
 ### Prerequisites
