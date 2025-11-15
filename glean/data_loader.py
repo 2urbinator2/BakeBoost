@@ -7,15 +7,99 @@ Each store gets its own train/test split for federated learning.
 
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from datetime import datetime, timedelta
+import warnings
+warnings.filterwarnings('ignore')
+
 from pathlib import Path
 from sklearn.model_selection import train_test_split
 from logging import INFO, WARNING
 from flwr.common.logger import log
 
+from prophet import Prophet
+from prophet.plot import plot_plotly, add_changepoints_to_plot
+from prophet.diagnostics import cross_validation, performance_metrics
+
+import xgboost as xgb
+from sklearn.model_selection import GridSearchCV, TimeSeriesSplit
+from sklearn.metrics import mean_squared_error, mean_absolute_error
+from sklearn.preprocessing import LabelEncoder
+
+from statsmodels.tsa.seasonal import seasonal_decompose
+from statsmodels.tsa.stattools import adfuller
+
+from math import sqrt
+
+# Set plotting style
+available_styles = plt.style.available
+if 'seaborn-v0_8-darkgrid' in available_styles:
+    plt.style.use('seaborn-v0_8-darkgrid')
+elif 'ggplot' in available_styles:
+    plt.style.use('ggplot')
+elif 'fivethirtyeight' in available_styles:
+    plt.style.use('fivethirtyeight')
+else:
+    log(INFO, 'Using default matplotlib style')
+
+try:
+    sns.set_palette("husl")
+except:
+    pass
+
 
 def get_data_path():
     """Get absolute path to data directory."""
     return Path(__file__).parent.parent / "data"
+
+
+def load_all_data(verbose=True):
+    """
+    Load train, test, and sample submission data with comprehensive analysis.
+
+    This function loads all datasets and provides detailed information about:
+    - Dataset shapes and columns
+    - Data types
+    - Missing values
+    - Summary statistics
+
+    Args:
+        verbose: If True, print detailed information about the datasets
+
+    Returns:
+        Tuple of (train_data, test_data, sample_submission)
+    """
+    data_path = get_data_path()
+
+    # Load datasets
+    train_data = pd.read_csv(data_path / 'train.csv')
+    test_data = pd.read_csv(data_path / 'test.csv')
+    sample_submission = pd.read_csv(data_path / 'sample_submission.csv')
+
+    if verbose:
+        log(INFO, f'Train shape: {train_data.shape}')
+        log(INFO, f'Test shape: {test_data.shape}')
+        log(INFO, f'Submission shape: {sample_submission.shape}')
+        log(INFO, f'\nTrain columns: {train_data.columns.tolist()}')
+
+        log(INFO, '\nFirst few rows of training data:')
+        log(INFO, f'\n{train_data.head()}')
+
+        log(INFO, '\nTraining data summary statistics:')
+        log(INFO, f'\n{train_data.describe()}')
+
+        log(INFO, '\nData types:')
+        log(INFO, f'\n{train_data.dtypes}')
+
+        log(INFO, '\nMissing values in train:')
+        missing_vals = train_data.isnull().sum()
+        if missing_vals.sum() > 0:
+            log(INFO, f'\n{missing_vals[missing_vals > 0]}')
+        else:
+            log(INFO, 'No missing values found!')
+
+    return train_data, test_data, sample_submission
 
 
 def get_num_stores():
