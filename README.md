@@ -1,4 +1,4 @@
-# BakerBoost 
+# BakeBoost 
 
 ## The Problem
 
