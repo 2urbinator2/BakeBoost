@@ -10,8 +10,6 @@ Bake Boost is the federated learning platform that lets bakeries collaborate on 
 
 Small bakeries face a daily dilemma: produce too much, waste food, money and labor at the end of the day. Or even produce too little and disappoint customers. Especially for small bakeries, this makes it extremely difficult to keep up with the large competition from chains. They lack the data science expertise and resources that large chains have. The result: massive food waste, higher costs, and inefficient staffing.
 
----
-
 ## Quick Start
 
 ### Prerequisites
