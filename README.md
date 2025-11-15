@@ -4,6 +4,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Framework: Flower](https://img.shields.io/badge/Framework-Flower-blue.svg)](https://flower.dev)
 
+This project was created at the [Distributed AI Hack Berlin](https://ai-berlin.com/de/events-tiles/event/cold-start-distributed-ai-hack-berlin), held on November 14–15, 2025.
+For our analysis, we relied on the [Pastry Prediction Data](https://www.kaggle.com/competitions/pastry-prediction/overview) provided on Kaggle.
 
 Bake Boost is the federated learning platform that lets bakeries collaborate on demand forecasting **without sharing their sensitive data**. Each bakery trains a model on their own sales history locally. These models share learnings with each other through Flower, a privacy-preserving federated framework, creating a collective intelligence.
 
