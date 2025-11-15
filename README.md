@@ -59,21 +59,4 @@ Test with 5 simulated bakeries on your local machine:
 flwr run . local-simulation
 ```
 
-
-## Project Structure
-```
-glean/
-├── glean/
-│   ├── __init__.py         
-│   ├── server_app.py      
-│   ├── client_app.py       
-│   └── task.py           
-├── data/                  
-├── pyproject.toml        
-├── requirements.txt       
-├── cluster-cpu.toml    
-├── cluster-gpu.toml      
-└── README.md           
-```
-
 **Built with [Flower](https://flower.ai/) - The Friendly Federated Learning Framework**
