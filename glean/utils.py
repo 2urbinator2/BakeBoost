@@ -8,7 +8,7 @@ parameter exchange format (numpy arrays).
 import io
 import numpy as np
 import xgboost as xgb
-from typing import List
+from typing import List, Optional
 from logging import INFO, WARNING
 from flwr.common.logger import log
 
@@ -45,7 +45,7 @@ def model_to_parameters(model: xgb.XGBRegressor) -> List[np.ndarray]:
         return [np.array([])]
 
 
-def parameters_to_model(parameters: List[np.ndarray]) -> xgb.XGBRegressor:
+def parameters_to_model(parameters: List[np.ndarray]) -> Optional[xgb.XGBRegressor]:
     """
     Deserialize Flower parameters to XGBoost model.
 
@@ -72,9 +72,16 @@ def parameters_to_model(parameters: List[np.ndarray]) -> xgb.XGBRegressor:
         # Convert numpy array back to bytes
         model_json = model_data.tobytes()
 
-        # Create new XGBoost model and load from JSON
+        # Create new XGBoost model
         model = xgb.XGBRegressor()
-        model.get_booster().load_model(bytearray(model_json))
+
+        # Load the booster from serialized data
+        # Note: We need to create a booster first, then load into it
+        booster = xgb.Booster()
+        booster.load_model(bytearray(model_json))
+
+        # Set the booster to the XGBRegressor
+        model._Booster = booster
 
         return model
 

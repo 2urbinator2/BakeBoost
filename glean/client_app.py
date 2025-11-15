@@ -36,13 +36,21 @@ class BakeryClient(NumPyClient):
         Initialize bakery client and load store-specific data.
 
         Args:
-            cid: Client ID (Flower assigns random large IDs)
+            cid: Client ID (can be partition ID or node ID)
         """
         self.cid = cid
 
-        # Map Flower's random client ID to one of our 9 stores (0-8)
-        # Use hash to ensure consistent mapping
-        store_num = hash(cid) % 9
+        # Try to parse cid as integer (partition ID 0-8)
+        # If that fails, use hash-based mapping as fallback
+        try:
+            store_num = int(cid)
+            if store_num < 0 or store_num > 8:
+                # If out of range, use hash-based mapping
+                store_num = hash(cid) % 9
+        except (ValueError, TypeError):
+            # Not an integer, use hash-based mapping
+            store_num = hash(cid) % 9
+
         self.store_id = f"store_{store_num}"
 
         log(INFO, f"Initializing client {cid} → {self.store_id}")
@@ -147,14 +155,27 @@ def client_fn(context: Context):
 
     This is called by Flower for each bakery that joins the federation.
 
+    In simulation mode with --num-supernodes 9, Flower assigns partition IDs 0-8.
+    We use these partition IDs to map to store_0 through store_8.
+
     Args:
         context: Flower context containing node configuration
 
     Returns:
         Configured FlowerClient instance
     """
+    # Try to get partition_id from context (available in simulation mode)
+    # This ensures each supernode gets a unique store (0-8)
+    if hasattr(context, 'node_config') and context.node_config:
+        partition_id = context.node_config.get('partition-id')
+        if partition_id is not None:
+            bakery_id = str(partition_id)
+            log(INFO, f"Creating client for Bakery (partition {bakery_id})")
+            return BakeryClient(cid=bakery_id).to_client()
+
+    # Fallback to node_id if partition-id not available
     bakery_id = str(context.node_id)
-    log(INFO, f"Creating client for Bakery {bakery_id}")
+    log(INFO, f"Creating client for Bakery (node {bakery_id})")
     return BakeryClient(cid=bakery_id).to_client()
 
 
