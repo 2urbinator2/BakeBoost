@@ -11,6 +11,8 @@ Small bakeries face a daily dilemma—produce too much and waste food, money, an
 
 Glean is a federated learning platform that lets bakeries collaborate on demand forecasting **without sharing their sensitive data**. Each bakery trains a model on their own sales history locally. These models share learnings with each other through Flower—a privacy-preserving federated framework—creating a collective intelligence that's smarter than any bakery could achieve alone.
 
+![BakeBoost](ElevatorPitch.png)
+
 ## Impact
 
 - Lower waste disposal costs
