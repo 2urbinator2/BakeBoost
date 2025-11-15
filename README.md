@@ -2,6 +2,7 @@
 
 [![Python 3.7+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Framework: Flower](https://img.shields.io/badge/Framework-Flower-blue.svg)](https://flower.dev)
 
 
 Bake Boost is the federated learning platform that lets bakeries collaborate on demand forecasting **without sharing their sensitive data**. Each bakery trains a model on their own sales history locally. These models share learnings with each other through Flower, a privacy-preserving federated framework, creating a collective intelligence.
