@@ -1,5 +1,8 @@
 # BakeBoost 
 
+[![Python 3.7+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 ## The Problem
 
 Small bakeries face a daily dilemma—produce too much and waste food, money, and labor at the end of the day, or produce too little and disappoint customers. Especially for small bakeries, this makes it extremely difficult to keep up with the large competition from chains. They lack the data science expertise and resources that large chains have. The result: massive food waste, higher costs, and inefficient staffing.
