@@ -4,15 +4,17 @@ Glean Federated Server Application
 This module implements the federated learning server that coordinates
 training across multiple bakery clients without accessing their raw data.
 
-The server uses Federated Averaging (FedAvg) to aggregate model updates
-from each bakery and distribute the improved global model back to clients.
+The server uses a custom XGBoost Ensemble Strategy because XGBoost models
+are tree-based and cannot be averaged like neural network weights.
 """
 
 from flwr.server import ServerApp, ServerAppComponents, ServerConfig
-from flwr.server.strategy import FedAvg
 from flwr.common import Context
 from logging import INFO
 from flwr.common.logger import log
+
+# Import custom XGBoost strategy
+from glean.strategy import XGBoostEnsembleStrategy
 
 
 def server_fn(context: Context) -> ServerAppComponents:
@@ -25,16 +27,17 @@ def server_fn(context: Context) -> ServerAppComponents:
     Returns:
         ServerAppComponents with strategy and configuration
     """
-    log(INFO, "Glean federated server initialized with FedAvg strategy")
+    log(INFO, "Glean federated server initialized with XGBoost Ensemble Strategy")
     log(INFO, "Waiting for bakery clients to connect...")
 
-    # Define federated averaging strategy
-    strategy = FedAvg(
+    # Define XGBoost ensemble strategy
+    # With 9 stores, require majority (5) to participate
+    strategy = XGBoostEnsembleStrategy(
         fraction_fit=1.0,  # Use 100% of available clients for training each round
         fraction_evaluate=1.0,  # Use 100% of clients for evaluation
-        min_fit_clients=3,  # Minimum 3 bakeries needed to start training
-        min_evaluate_clients=3,  # Minimum 3 bakeries needed for evaluation
-        min_available_clients=3,  # Wait for at least 3 bakeries to connect
+        min_fit_clients=5,  # Minimum 5 stores (majority of 9) needed to start training
+        min_evaluate_clients=5,  # Minimum 5 stores needed for evaluation
+        min_available_clients=5,  # Wait for at least 5 stores to connect
     )
 
     # Server configuration

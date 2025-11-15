@@ -11,8 +11,13 @@ Privacy-preserving by design: Raw sales data never leaves the bakery.
 from flwr.client import ClientApp, NumPyClient
 from flwr.common import Context
 import numpy as np
-from logging import INFO
+from logging import INFO, WARNING
 from flwr.common.logger import log
+
+# Import Glean modules for real XGBoost training
+from glean.data_loader import load_store_data
+from glean.task import train_model, evaluate_model
+from glean.utils import model_to_parameters, parameters_to_model
 
 
 class BakeryClient(NumPyClient):
@@ -28,93 +33,119 @@ class BakeryClient(NumPyClient):
 
     def __init__(self, cid: str):
         """
-        Initialize bakery client.
+        Initialize bakery client and load store-specific data.
 
         Args:
-            cid: Client ID (bakery identifier)
+            cid: Client ID (can be partition ID or node ID)
         """
         self.cid = cid
-        log(INFO, f"Bakery client {cid} initialized")
 
-        # TODO: Replace with real XGBoost model weights
-        # For now: dummy weights for testing federated setup
-        # Use hash to ensure seed is within numpy's valid range (0 to 2^32-1)
-        seed = hash(cid) % (2**32)
-        np.random.seed(seed)
-        self.weights = [
-            np.random.rand(10, 5),  # Feature weights
-            np.random.rand(5)       # Bias terms
-        ]
+        # Try to parse cid as integer (partition ID 0-8)
+        # If that fails, use hash-based mapping as fallback
+        try:
+            store_num = int(cid)
+            if store_num < 0 or store_num > 8:
+                # If out of range, use hash-based mapping
+                store_num = hash(cid) % 9
+        except (ValueError, TypeError):
+            # Not an integer, use hash-based mapping
+            store_num = hash(cid) % 9
+
+        self.store_id = f"store_{store_num}"
+
+        log(INFO, f"Initializing client {cid} → {self.store_id}")
+
+        # Load data for THIS store only
+        try:
+            self.X_train, self.X_test, self.y_train, self.y_test = load_store_data(self.store_id)
+            self.has_data = True
+            log(INFO, f"{self.store_id}: Data loaded successfully")
+        except Exception as e:
+            log(WARNING, f"{self.store_id}: Failed to load data - {e}")
+            self.has_data = False
+            self.X_train = None
+            self.X_test = None
+            self.y_train = None
+            self.y_test = None
 
     def fit(self, parameters, config):
         """
-        Train model on bakery's local sales data.
+        Train XGBoost model on store's local sales data.
 
-        In production, this would:
-        1. Load bakery's historical sales data
-        2. Train XGBoost forecasting model
-        3. Return updated model parameters
+        This implements real federated learning:
+        1. Trains XGBoost on THIS store's data only
+        2. Serializes trained model to parameters
+        3. Returns parameters to server for aggregation
 
         Args:
-            parameters: Global model parameters from server
-            config: Training configuration (epochs, batch size, etc.)
+            parameters: Global model parameters from server (currently unused)
+            config: Training configuration from server
 
         Returns:
-            Tuple of (updated_weights, num_training_examples, metrics)
+            Tuple of (updated_parameters, num_training_examples, metrics)
         """
-        log(INFO, f"Bakery {self.cid}: Training on local sales data...")
+        # If no data available, return empty
+        if not self.has_data:
+            log(WARNING, f"{self.store_id}: No data - skipping training")
+            return [], 0, {}
 
-        # TODO: Implement actual training logic:
-        # 1. Load data from data/bakery_{cid}_sales.csv
-        # 2. Preprocess time series (windowing, normalization)
-        # 3. Train XGBoost model
-        # 4. Return trained model weights
+        log(INFO, f"{self.store_id}: Training XGBoost on {len(self.X_train)} samples...")
 
-        # For now: Simulate training by adding small random updates
-        updated_weights = [
-            w + np.random.rand(*w.shape) * 0.1
-            for w in self.weights
-        ]
+        # Train XGBoost model on local data
+        model = train_model(self.X_train, self.y_train)
 
-        num_examples = 100  # TODO: Replace with actual training data size
-        metrics = {}  # TODO: Add training loss/accuracy
+        # Serialize model to parameters for federated aggregation
+        updated_parameters = model_to_parameters(model)
 
-        log(INFO, f"Bakery {self.cid}: Training completed")
-        return updated_weights, num_examples, metrics
+        # Return actual training set size
+        num_examples = len(self.X_train)
+
+        log(INFO, f"{self.store_id}: Training completed ({num_examples} samples)")
+
+        return updated_parameters, num_examples, {}
 
     def evaluate(self, parameters, config):
         """
-        Evaluate model on bakery's local test data.
+        Evaluate global model on store's local test data.
 
-        In production, this would:
-        1. Load bakery's test data
-        2. Make predictions with current model
-        3. Calculate metrics (MAE, RMSE, MAPE)
+        This implements real federated evaluation:
+        1. Deserializes global model from parameters
+        2. Makes predictions on THIS store's test data
+        3. Calculates real metrics (MAE, RMSE, MAPE)
 
         Args:
-            parameters: Current global model parameters
+            parameters: Global model parameters from server
             config: Evaluation configuration
 
         Returns:
             Tuple of (loss, num_test_examples, metrics_dict)
         """
-        log(INFO, f"Bakery {self.cid}: Evaluating model on local test data...")
+        # If no data available, return empty
+        if not self.has_data:
+            log(WARNING, f"{self.store_id}: No data - skipping evaluation")
+            return 0.0, 0, {}
 
-        # TODO: Implement actual evaluation:
-        # 1. Load test data
-        # 2. Generate predictions
-        # 3. Calculate MAE, RMSE, MAPE
+        log(INFO, f"{self.store_id}: Evaluating on {len(self.X_test)} test samples...")
 
-        # For now: Return dummy metrics
-        loss = float(np.random.rand())  # TODO: Real evaluation loss
-        num_examples = 50  # TODO: Actual test set size
-        metrics = {
-            "mae": 10.5,  # Mean Absolute Error (in sales units)
-            "rmse": 15.2,  # Root Mean Squared Error
-            "mape": 8.3    # Mean Absolute Percentage Error
-        }
+        # Deserialize global model from parameters
+        model = parameters_to_model(parameters)
 
-        log(INFO, f"Bakery {self.cid}: Evaluation completed (Loss: {loss:.4f})")
+        if model is None:
+            log(WARNING, f"{self.store_id}: Failed to deserialize model - using default metrics")
+            return 0.0, 0, {}
+
+        # Calculate real metrics on local test data
+        metrics = evaluate_model(model, self.X_test, self.y_test)
+
+        # Use MAE as primary loss metric
+        loss = metrics["mae"]
+        num_examples = len(self.X_test)
+
+        log(INFO,
+            f"{self.store_id}: Evaluation complete - "
+            f"MAE={metrics['mae']:.2f}, RMSE={metrics['rmse']:.2f}, MAPE={metrics['mape']:.2f}%"
+        )
+
         return loss, num_examples, metrics
 
 
@@ -124,14 +155,27 @@ def client_fn(context: Context):
 
     This is called by Flower for each bakery that joins the federation.
 
+    In simulation mode with --num-supernodes 9, Flower assigns partition IDs 0-8.
+    We use these partition IDs to map to store_0 through store_8.
+
     Args:
         context: Flower context containing node configuration
 
     Returns:
         Configured FlowerClient instance
     """
+    # Try to get partition_id from context (available in simulation mode)
+    # This ensures each supernode gets a unique store (0-8)
+    if hasattr(context, 'node_config') and context.node_config:
+        partition_id = context.node_config.get('partition-id')
+        if partition_id is not None:
+            bakery_id = str(partition_id)
+            log(INFO, f"Creating client for Bakery (partition {bakery_id})")
+            return BakeryClient(cid=bakery_id).to_client()
+
+    # Fallback to node_id if partition-id not available
     bakery_id = str(context.node_id)
-    log(INFO, f"Creating client for Bakery {bakery_id}")
+    log(INFO, f"Creating client for Bakery (node {bakery_id})")
     return BakeryClient(cid=bakery_id).to_client()
 
 
